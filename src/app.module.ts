@@ -13,6 +13,9 @@ import { ProfileModule } from './modules/profile/profile.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { CommentsModule } from './modules/comments/comments.module';
 import { ReactionsModule } from './modules/reactions/reactions.module';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
+import { CustomThrottlerGuard } from './common/Guards/customThrottler.guard';
 
 @Module({
   imports: [
@@ -24,6 +27,14 @@ import { ReactionsModule } from './modules/reactions/reactions.module';
       useFactory: typeOrmConfigFactory,
       inject: [ConfigService],
     }),
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 60000, // 10 request per IP on 60 seconds
+          limit: 10,
+        },
+      ],
+    }),
     JwtModule,
     UsersModule,
     PostsModule,
@@ -34,6 +45,12 @@ import { ReactionsModule } from './modules/reactions/reactions.module';
     ReactionsModule,
   ],
   controllers: [AppController, UsersController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: CustomThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}
