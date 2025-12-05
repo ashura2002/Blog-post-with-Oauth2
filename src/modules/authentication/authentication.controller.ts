@@ -17,9 +17,15 @@ import { RoleAuthGuard } from 'src/common/Guards/roles-auth.guard';
 import { Role } from 'src/common/decorators/roles.decorator';
 import { Roles } from 'src/common/Enums/roles.enums';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
+import { register } from 'module';
 
 @Controller('authentication')
 @ApiBearerAuth('access-token')
+@Throttle({
+  register: { limit: 3, ttl: 60 },
+  login: { limit: 5, ttl: 20 },
+})
 export class AuthenticationController {
   constructor(private readonly authenticationService: AuthenticationService) {}
 
