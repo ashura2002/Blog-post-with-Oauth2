@@ -16,6 +16,7 @@ import { JWTAuthGuard } from 'src/common/Guards/jwt-auth.guard';
 import { RoleAuthGuard } from 'src/common/Guards/roles-auth.guard';
 import { AddFriendDTO } from './dto/add-friend.dto';
 import { Friend } from './entity/friend.entity';
+import { RequestOptionsDTO } from './dto/friend-request-options.dto';
 
 @Controller('friends')
 @ApiBearerAuth('access-token')
@@ -58,5 +59,23 @@ export class FriendsController {
       friendRequestID,
       userId,
     );
+  }
+
+  @Post('decision/:requestId')
+  @HttpCode(HttpStatus.CREATED)
+  async friendRequestDecision(
+    @Body() requestOptionsDTO: RequestOptionsDTO,
+    @Req() req,
+    @Param('requestId') requestId: number,
+  ): Promise<{ message: string }> {
+    const { userId } = req.user;
+    await this.friendsService.friendRequestDecision(
+      requestOptionsDTO,
+      userId,
+      requestId,
+    );
+    return {
+      message: `Friend request is successfully ${requestOptionsDTO.status}.`,
+    };
   }
 }

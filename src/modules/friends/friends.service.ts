@@ -11,6 +11,7 @@ import { UsersService } from '../users/users.service';
 import { AddFriendDTO } from './dto/add-friend.dto';
 import { NotificationsService } from '../notifications/notifications.service';
 import { FriendStatus } from 'src/common/Enums/friend-status-enum';
+import { RequestOptionsDTO } from './dto/friend-request-options.dto';
 
 @Injectable()
 export class FriendsService {
@@ -81,10 +82,29 @@ export class FriendsService {
       .leftJoinAndSelect('friend.requester', 'requester')
       .where('friend.id =:friendRequestID', { friendRequestID })
       .andWhere('receiver.id =:userId', { userId })
+      .andWhere('friend.status =:status', { status: FriendStatus.PENDING })
       .getOne();
 
     if (!friendRequest) throw new NotFoundException();
-
     return friendRequest;
   }
+
+  async friendRequestDecision(
+    requestOptionsDTO: RequestOptionsDTO,
+    userId: number,
+    requestId: number,
+  ): Promise<void> {
+    const friendRequest = await this.findOneFriendRequest(requestId, userId);
+    friendRequest.status = requestOptionsDTO.status;
+    // notify the requester for the result of there request
+    await this.notificationService.create(friendRequest.requester.id, {
+      message: `Your friend request was ${requestOptionsDTO.status} by ${friendRequest.receiver.email}.`,
+    });
+    await this.friendRepository.save(friendRequest);
+  }
 }
+
+// to do
+// delete request
+// maybe get all rejected request
+// normalize the response for get all friends
