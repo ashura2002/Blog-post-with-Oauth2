@@ -1,33 +1,38 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
-import { Strategy, VerifyCallback } from 'passport-google-oauth20';
+import { Strategy, Profile } from 'passport-google-oauth20';
+
+export interface GoogleUserPayload {
+  email: string;
+  displayName: string;
+}
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   constructor(private readonly configService: ConfigService) {
     super({
-      clientID: configService.get<string>('GOOGLE_CLIENT_ID'),
-      clientSecret: configService.get<string>('GOOGLE_CLIENT_SECRET'),
+      clientID: configService.getOrThrow<string>('GOOGLE_CLIENT_ID'),
+      clientSecret: configService.getOrThrow<string>('GOOGLE_CLIENT_SECRET'),
       callbackURL: 'http://localhost:8000/authentication/google/redirect',
       scope: ['email', 'profile'],
     });
   }
 
-  async validate(
+  validate(
     accessToken: string,
     refreshToken: string,
-    profile: any,
-    done: VerifyCallback,
-  ): Promise<any> {
-    const { emails, displayName } = profile;
-    console.log(emails, displayName);
+    profile: Profile,
+  ): GoogleUserPayload {
+    const email = profile.emails?.[0]?.value;
 
-    const user = {
-      email: emails[0].value,
-      displayName,
+    if (!email) {
+      throw new Error('Google account has no email');
+    }
+
+    return {
+      email,
+      displayName: profile.displayName,
     };
-
-    done(null, user);
   }
 }
