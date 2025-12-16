@@ -77,9 +77,8 @@ export class AuthenticationController {
   @UseGuards(AuthGuard('google'))
   @HttpCode(HttpStatus.OK)
   async googleAuthRedirect(@Req() req: AuthRequest) {
-    const jwt = await this.authenticationService.googleLogin(
-      req.user as JwtResponsePayload,
-    );
+    const user: JwtResponsePayload = req.user as JwtResponsePayload;
+    const jwt = await this.authenticationService.googleLogin(user);
     return { message: 'Login Successfully', accessToken: jwt };
   }
 }
