@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Comment } from 'src/modules/comments/entity/comment.entity';
 import { Reaction } from 'src/modules/reactions/entity/reaction.entity';
 
 export class ResponsePost {
@@ -12,7 +13,7 @@ export class ResponsePost {
   mediaUrls: string[] | null;
 
   @ApiProperty()
-  comments: string[];
+  comments: Comment[];
 
   @ApiProperty()
   reactions: Reaction[];

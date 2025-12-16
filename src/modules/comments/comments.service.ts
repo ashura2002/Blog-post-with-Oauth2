@@ -49,7 +49,7 @@ export class CommentsService {
     return await this.commentRepository.save(comment);
   }
 
-  async getComment(postId: number): Promise<any> {
+  async getComment(postId: number): Promise<Comment[]> {
     const comments = await this.commentRepository
       .createQueryBuilder('comments')
       .leftJoin('comments.user', 'user')

@@ -1,37 +1,26 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import nodemailer, { Transporter, SendMailOptions } from 'nodemailer';
+import * as nodemailer from 'nodemailer';
+import { Transporter, SendMailOptions } from 'nodemailer';
 
 @Injectable()
 export class EmailService {
-  private transporter: Transporter;
+  private readonly transporter: Transporter;
 
   constructor(private readonly configService: ConfigService) {
-    const transport = nodemailer.createTransport({
-      host: this.configService.get<string>('MAIL_HOST')!,
-      port: this.configService.get<number>('MAIL_PORT')!,
+    this.transporter = nodemailer.createTransport({
+      host: this.configService.getOrThrow<string>('MAIL_HOST'),
+      port: this.configService.getOrThrow<number>('MAIL_PORT'),
       auth: {
-        user: this.configService.get<string>('MAIL_USER')!,
-        pass: this.configService.get<string>('MAIL_PASS')!,
+        user: this.configService.getOrThrow<string>('MAIL_USER'),
+        pass: this.configService.getOrThrow<string>('MAIL_PASS'),
       },
     });
-
-    // Type-safe check before assignment
-    if (
-      !('sendMail' in transport) ||
-      typeof transport.sendMail !== 'function'
-    ) {
-      throw new InternalServerErrorException(
-        'Failed to create mail transporter',
-      );
-    }
-
-    this.transporter = transport;
   }
 
-  async sendVerificationCode(to: string, code: string) {
+  async sendVerificationCode(to: string, code: string): Promise<void> {
     const message: SendMailOptions = {
-      from: this.configService.get<string>('MAIL_USER')!,
+      from: this.configService.getOrThrow<string>('MAIL_USER'),
       to,
       subject: 'Social Feed',
       text: 'Your verification code will expire in 5 minutes.',
