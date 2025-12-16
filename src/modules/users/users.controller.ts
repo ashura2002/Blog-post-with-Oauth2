@@ -85,7 +85,8 @@ export class UsersController {
     @Req() req: AuthRequest,
     @Body() dto: VerifyPasswordChangeDTO,
   ): Promise<{ message: string }> {
-    await this.userService.verifyPasswordChange(req.user.userId, dto);
+    const { userId } = req.user;
+    await this.userService.verifyPasswordChange(userId, dto);
     return {
       message: 'Password successfully changed.',
     };
